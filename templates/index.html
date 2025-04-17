@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ofertas PedidosYa Market</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20 }
+    </style>
+</head>
+<body>
+
+    <h1>🛒 Ofertas PedidosYa Market 🛒</h1>
+
+    <!-- Formulario de Búsqueda -->
+    <div class="search-form">
+        <form method="GET" action="{{ url_for('mostrar_ofertas_con_filtro') }}">
+            <input type="text" name="search" placeholder="Buscar por nombre..." value="{{ search_query }}">
+            <input type="hidden" name="sort" value="{{ current_sort }}">
+            <button type="submit">Buscar</button>
+        </form>
+    </div>
+
+    <!-- Controles de Ordenación -->
+    <div class="sort-controls">
+        <span>Ordenar por:</span>
+        {% if current_sort == 'price' %}
+            <strong>Precio (Menor a Mayor)</strong> |
+            <a href="{{ url_for('mostrar_ofertas_con_filtro', sort='discount', search=search_query) }}">Mayor Descuento</a> |
+            <a href="{{ url_for('mostrar_ofertas_con_filtro', sort='category', search=search_query) }}">Categoría</a>
+        {% elif current_sort == 'discount' %}
+            <a href="{{ url_for('mostrar_ofertas_con_filtro', sort='price', search=search_query) }}">Precio (Menor a Mayor)</a> |
+            <strong>Mayor Descuento</strong> |
+            <a href="{{ url_for('mostrar_ofertas_con_filtro', sort='category', search=search_query) }}">Categoría</a>
+        {% else %} {# category es el default #}
+            <a href="{{ url_for('mostrar_ofertas_con_filtro', sort='price', search=search_query) }}">Precio (Menor a Mayor)</a> |
+            <a href="{{ url_for('mostrar_ofertas_con_filtro', sort='discount', search=search_query) }}">Mayor Descuento</a> |
+            <strong>Categoría</strong>
+        {% endif %}
+    </div>
+    <hr>
+
+    {% if error_message %}
+        <p class="error">{{ error_message }}</p>
+
+    {# ---- MODO ORDENADO (Precio o Descuento) ---- #}
+    {% elif current_sort == 'price' or current_sort == 'discount' %}
+        {% if not products_sorted %}
+             <p>No se encontraron ofertas {% if search_query %} que coincidan con '{{ search_query }}'{% endif %}.</p>
+        {% else %}
+            <div class="results-count">Mostrando {{ products_sorted|length }} oferta(s) {% if search_query %} que coinciden con '{{ search_query }}'{% endif %}.</div>
+            <div class="product-grid">
+                {# Inicio del bucle principal para modo ordenado #}
+                {% for product in products_sorted %}
+                    {# --- Contenido de UNA tarjeta --- #}
+                    <div class="product-card">
+                        <a href="#" class="info-icon" data-product-id="{{ product.id }}" title="Ver detalles">
+                            <span class="material-symbols-outlined">info</span>
+                        </a>
+                        {% if product.absoluteImages and product.absoluteImages|length > 0 %}<img src="{{ product.absoluteImages[0] }}" alt="{{ product.name }}" loading="lazy">{% else %}<img src="{{ url_for('static', filename='placeholder.png') }}" alt="Sin imagen" loading="lazy">{% endif %}
+                        <h3>{{ product.name }}</h3>
+                        {% if product.categoryName %} <p class="product-category">Categoría: {{ product.categoryName }}</p> {% endif %}
+                        {% if current_sort == 'discount' and product.discount_percentage and product.discount_percentage > 0.1 %} <span class="discount-percent">{{ product.discount_percentage | round(1) }}% OFF (Equiv.)</span> {% endif %}
+                        {% if product.campaigns and product.campaigns|length > 0 and product.campaigns[0].tag %} <span class="offer-tag">{{ product.campaigns[0].tag }}</span> {% endif %}
+                        <div class="pricing">{% set pricing = product.pricing %}{% if pricing %}{% set formatted = pricing.formattedPrices %}{% if pricing.beforePrice and pricing.price and pricing.beforePrice > pricing.price %}<span class="original-price"><del>{{ formatted.originalPrice if formatted else ('$ ' + pricing.beforePrice|string) }}</del></span> <span class="current-price">{{ formatted.price if formatted else ('$ ' + pricing.price|string) }}</span>{% elif formatted and formatted.price %} <span class="current-price">{{ formatted.price }}</span>{% elif pricing.price %} <span class="current-price">$ {{ pricing.price }}</span>{% else %} <span class="current-price">Precio no disponible</span>{% endif %}{% if formatted and formatted.pricePerMeasurementUnit %}<span class="unit-price">{{ formatted.pricePerMeasurementUnit }}</span>{% elif pricing.pricePerMeasurementUnitStruct %}<span class="unit-price">$ {{ pricing.pricePerMeasurementUnitStruct.price }} / {{ pricing.pricePerMeasurementUnitStruct.unit }}</span>{% endif %}{% else %}<span class="current-price">Precio no disponible</span>{% endif %}</div>
+                        {% if product.stock is defined %} <p class="stock">Stock: {{ product.stock }}</p> {% endif %}
+                        {% if product.description %} <p class="description">{{ product.description }}</p> {% endif %}
+                    </div> {# --- FIN Contenido de UNA tarjeta --- #}
+
+                    {# --- Modal OCULTO para ESTE producto --- #}
+                    <div id="modal-{{ product.id }}" class="modal">
+                        <div class="modal-content">
+                            <span class="close-modal" data-product-id="{{ product.id }}" title="Cerrar">×</span>
+                            <h2>{{ product.name }}</h2>
+                            <div class="modal-details-container">
+                                <div class="modal-image-container">{% if product.absoluteImages and product.absoluteImages|length > 0 %}<img class="modal-main-image" src="{{ product.absoluteImages[0] }}" alt="Imagen principal de {{ product.name }}">{% else %}<img class="modal-main-image" src="{{ url_for('static', filename='placeholder.png') }}" alt="Sin imagen">{% endif %}</div>
+                                <div class="modal-section">{% if product.defaultBrandName %}<p><strong>Marca:</strong> {{ product.defaultBrandName }}</p>{% endif %}{% if product.size and product.size.content and product.size.unit %}<p><strong>Contenido:</strong> {{ product.size.content }} {{ product.size.unit }}</p>{% endif %}{% if product.stock is defined and product.stock > 0 %}<p><strong>Stock:</strong> {{ product.stock }}</p>{% elif product.stock is defined and product.stock <= 0 %}<p><strong>Stock:</strong> <span style="color: red;">Agotado</span></p>{% endif %}{% if product.categoryName %}<p><strong>Categoría:</strong> {{ product.categoryName }}</p>{% endif %}</div>
+                                <div class="modal-section modal-pricing-offer"><h4>Precio y Oferta</h4>{% set pricing = product.pricing %}{% if pricing %}{% set formatted = pricing.formattedPrices %}{% if product.campaigns and product.campaigns|length > 0 and product.campaigns[0].tag %}<p><span class="offer-tag modal-offer-tag">{{ product.campaigns[0].tag }}</span></p>{% endif %}{% if pricing.beforePrice and pricing.price and pricing.beforePrice > pricing.price %}<p>Precio Oferta: <span class="current-price">{{ formatted.price if formatted else ('$ ' + pricing.price|string) }}</span></p><p>Precio Original: <span class="original-price"><del>{{ formatted.originalPrice if formatted else ('$ ' + pricing.beforePrice|string) }}</del></span></p>{% elif formatted and formatted.price %}<p>Precio: <span class="current-price">{{ formatted.price }}</span></p>{% elif pricing.price %}<p>Precio: <span class="current-price">$ {{ pricing.price }}</span></p>{% else %}<p><span class="current-price">Precio no disponible</span></p>{% endif %}{% if formatted and formatted.pricePerMeasurementUnit %}<p><small>({{ formatted.pricePerMeasurementUnit }})</small></p>{% elif pricing.pricePerMeasurementUnitStruct %}<p><small>($ {{ pricing.pricePerMeasurementUnitStruct.price }} / {{ pricing.pricePerMeasurementUnitStruct.unit }})</small></p>{% endif %}{% if product.campaigns and product.campaigns|length > 0 %}{% set campaign = product.campaigns[0] %}{% if campaign.type == 'multi-buy' and campaign.configuration.type == 'free_item' %}<p class="offer-detail"><em>(Llevando {{ campaign.configuration.take }}, pagas {{ campaign.configuration.pay }})</em></p>{% elif campaign.type == 'sameItemBundle' and campaign.configuration.type == 'percentage' %}<p class="offer-detail"><em>(Descuento del {{ campaign.configuration.value }}% en la {{ campaign.configuration.take }}ª unidad)</em></p>{% endif %}{% endif %}{% else %}<p>Precio no disponible</p>{% endif %}</div>
+                                {% if product.description %}<div class="modal-section"><h4>Descripción</h4><p>{{ product.description }}</p></div>{% endif %}
+                                {% if product.foodLabelling and product.foodLabelling.dietaryInformation %}<div class="modal-section"><h4>Etiquetas Dietarias</h4><p class="dietary-info">{{ product.foodLabelling.dietaryInformation | join(', ') | capitalize }}</p></div>{% endif %}
+                            </div>
+                        </div>
+                    </div> {# --- FIN Modal --- #}
+                {# Cierre del bucle principal para modo ordenado #}
+                {% endfor %}
+            </div> {# Fin product-grid #}
+        {% endif %} {# Fin if not products_sorted #}
+
+    {# ---- MODO AGRUPADO POR CATEGORÍA ---- #}
+    {% elif current_sort == 'category' %}
+         {% if not offers_by_category %}
+             <p>No se encontraron ofertas {% if search_query %} que coincidan con '{{ search_query }}'{% endif %}.</p>
+         {% else %}
+             {% set total_count = offers_by_category.values() | map('length') | sum %}
+             <div class="results-count">Mostrando {{ total_count }} oferta(s) en {{ offers_by_category|length }} categoría(s){% if search_query %} que coinciden con '{{ search_query }}'{% endif %}.</div>
+             {# Inicio del bucle de categorías #}
+             {% for category_name, products in offers_by_category.items() %}
+                <section class="category">
+                    <h2>{{ category_name }} ({{ products|length }})</h2>
+                    <div class="product-grid">
+                        {# Inicio del bucle de productos dentro de categoría #}
+                        {% for product in products %}
+                             {# --- Contenido de UNA tarjeta --- #}
+                             <div class="product-card">
+                                <a href="#" class="info-icon" data-product-id="{{ product.id }}" title="Ver detalles">
+                                    <span class="material-symbols-outlined">info</span>
+                                </a>
+                                {% if product.absoluteImages and product.absoluteImages|length > 0 %}<img src="{{ product.absoluteImages[0] }}" alt="{{ product.name }}" loading="lazy">{% else %}<img src="{{ url_for('static', filename='placeholder.png') }}" alt="Sin imagen" loading="lazy">{% endif %}
+                                <h3>{{ product.name }}</h3>
+                                {% if product.campaigns and product.campaigns|length > 0 and product.campaigns[0].tag %}<span class="offer-tag">{{ product.campaigns[0].tag }}</span>{% endif %}
+                                <div class="pricing">{% set pricing = product.pricing %}{% if pricing %}{% set formatted = pricing.formattedPrices %}{% if pricing.beforePrice and pricing.price and pricing.beforePrice > pricing.price %}<span class="original-price"><del>{{ formatted.originalPrice if formatted else ('$ ' + pricing.beforePrice|string) }}</del></span> <span class="current-price">{{ formatted.price if formatted else ('$ ' + pricing.price|string) }}</span>{% elif formatted and formatted.price %} <span class="current-price">{{ formatted.price }}</span>{% elif pricing.price %} <span class="current-price">$ {{ pricing.price }}</span>{% else %} <span class="current-price">Precio no disponible</span>{% endif %}{% if formatted and formatted.pricePerMeasurementUnit %}<span class="unit-price">{{ formatted.pricePerMeasurementUnit }}</span>{% elif pricing.pricePerMeasurementUnitStruct %}<span class="unit-price">$ {{ pricing.pricePerMeasurementUnitStruct.price }} / {{ pricing.pricePerMeasurementUnitStruct.unit }}</span>{% endif %}{% else %}<span class="current-price">Precio no disponible</span>{% endif %}</div>
+                                {% if product.stock is defined %} <p class="stock">Stock: {{ product.stock }}</p> {% endif %}
+                                {% if product.description %} <p class="description">{{ product.description }}</p> {% endif %}
+                            </div> {# --- FIN Contenido de UNA tarjeta --- #}
+
+                             {# --- Modal OCULTO para ESTE producto --- #}
+                            <div id="modal-{{ product.id }}" class="modal">
+                                 <div class="modal-content">
+                                     <span class="close-modal" data-product-id="{{ product.id }}" title="Cerrar">×</span>
+                                     <h2>{{ product.name }}</h2>
+                                      <div class="modal-details-container">
+                                          <div class="modal-image-container">{% if product.absoluteImages and product.absoluteImages|length > 0 %}<img class="modal-main-image" src="{{ product.absoluteImages[0] }}" alt="Imagen principal de {{ product.name }}">{% else %}<img class="modal-main-image" src="{{ url_for('static', filename='placeholder.png') }}" alt="Sin imagen">{% endif %}</div>
+                                          <div class="modal-section">{% if product.defaultBrandName %}<p><strong>Marca:</strong> {{ product.defaultBrandName }}</p>{% endif %}{% if product.size and product.size.content and product.size.unit %}<p><strong>Contenido:</strong> {{ product.size.content }} {{ product.size.unit }}</p>{% endif %}{% if product.stock is defined and product.stock > 0 %}<p><strong>Stock:</strong> {{ product.stock }}</p>{% elif product.stock is defined and product.stock <= 0 %}<p><strong>Stock:</strong> <span style="color: red;">Agotado</span></p>{% endif %}{% if product.categoryName %} <p><strong>Categoría:</strong> {{ category_name }}</p> {% endif %}</div>
+                                          <div class="modal-section modal-pricing-offer"><h4>Precio y Oferta</h4>{% set pricing = product.pricing %}{% if pricing %}{% set formatted = pricing.formattedPrices %}{% if product.campaigns and product.campaigns|length > 0 and product.campaigns[0].tag %}<p><span class="offer-tag modal-offer-tag">{{ product.campaigns[0].tag }}</span></p>{% endif %}{% if pricing.beforePrice and pricing.price and pricing.beforePrice > pricing.price %}<p>Precio Oferta: <span class="current-price">{{ formatted.price if formatted else ('$ ' + pricing.price|string) }}</span></p><p>Precio Original: <span class="original-price"><del>{{ formatted.originalPrice if formatted else ('$ ' + pricing.beforePrice|string) }}</del></span></p>{% elif formatted and formatted.price %}<p>Precio: <span class="current-price">{{ formatted.price }}</span></p>{% elif pricing.price %}<p>Precio: <span class="current-price">$ {{ pricing.price }}</span></p>{% else %}<p><span class="current-price">Precio no disponible</span></p>{% endif %}{% if formatted and formatted.pricePerMeasurementUnit %}<p><small>({{ formatted.pricePerMeasurementUnit }})</small></p>{% elif pricing.pricePerMeasurementUnitStruct %}<p><small>($ {{ pricing.pricePerMeasurementUnitStruct.price }} / {{ pricing.pricePerMeasurementUnitStruct.unit }})</small></p>{% endif %}{% if product.campaigns and product.campaigns|length > 0 %}{% set campaign = product.campaigns[0] %}{% if campaign.type == 'multi-buy' and campaign.configuration.type == 'free_item' %}<p class="offer-detail"><em>(Llevando {{ campaign.configuration.take }}, pagas {{ campaign.configuration.pay }})</em></p>{% elif campaign.type == 'sameItemBundle' and campaign.configuration.type == 'percentage' %}<p class="offer-detail"><em>(Descuento del {{ campaign.configuration.value }}% en la {{ campaign.configuration.take }}ª unidad)</em></p>{% endif %}{% endif %}{% else %}<p>Precio no disponible</p>{% endif %}</div>
+                                          {% if product.description %}<div class="modal-section"><h4>Descripción</h4><p>{{ product.description }}</p></div>{% endif %}
+                                          {% if product.foodLabelling and product.foodLabelling.dietaryInformation %}<div class="modal-section"><h4>Etiquetas Dietarias</h4><p class="dietary-info">{{ product.foodLabelling.dietaryInformation | join(', ') | capitalize }}</p></div>{% endif %}
+                                      </div>
+                                 </div>
+                             </div> {# --- FIN Modal --- #}
+                        {# Cierre del bucle de productos dentro de categoría #}
+                        {% endfor %}
+                    </div> {# Fin product-grid #}
+                </section> {# Fin category #}
+            {# Cierre del bucle de categorías #}
+            {% endfor %}
+        {% endif %} {# Fin if not offers_by_category #}
+    {% endif %} {# Fin del if/elif principal #}
+
+    <!-- Overlay -->
+    <div id="modal-overlay" class="modal-overlay"></div>
+
+    <!-- Script para manejar los modales (igual que antes) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => { const infoIcons = document.querySelectorAll('.info-icon'); const closeButtons = document.querySelectorAll('.close-modal'); const overlay = document.getElementById('modal-overlay'); infoIcons.forEach(icon => { icon.addEventListener('click', (event) => { event.preventDefault(); const productId = event.currentTarget.dataset.productId; const modal = document.getElementById(`modal-${productId}`); if (modal) { modal.style.display = 'block'; if (overlay) overlay.style.display = 'block'; } }); }); closeButtons.forEach(button => { button.addEventListener('click', (event) => { const productId = event.currentTarget.dataset.productId; const modal = document.getElementById(`modal-${productId}`); if (modal) { modal.style.display = 'none'; if (overlay) overlay.style.display = 'none'; } }); }); if (overlay) { overlay.addEventListener('click', () => { document.querySelectorAll('.modal').forEach(modal => { modal.style.display = 'none'; }); overlay.style.display = 'none'; }); } });
+    </script>
+
+</body>
+</html>

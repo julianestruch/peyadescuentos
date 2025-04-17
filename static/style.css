@@ -1,0 +1,396 @@
+body {
+    font-family: sans-serif;
+    margin: 20px;
+    background-color: #f8f8f8;
+}
+
+h1 {
+    text-align: center;
+    color: #e21836;
+    margin-bottom: 30px;
+}
+
+/* Estilos para los controles de ordenación */
+.sort-controls {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+}
+
+.sort-controls span {
+    margin-right: 10px;
+    color: #555;
+}
+
+.sort-controls a {
+    color: #007bff;
+    text-decoration: none;
+    margin: 0 5px;
+}
+
+.sort-controls a:hover {
+    text-decoration: underline;
+}
+
+.sort-controls strong {
+    color: #333;
+    margin: 0 5px;
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background-color: #ddd;
+    margin: 20px 0;
+}
+
+h2 {
+    color: #333;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-top: 40px;
+}
+
+.error {
+    color: red;
+    font-weight: bold;
+    text-align: center;
+    border: 1px solid red;
+    padding: 15px;
+    background-color: #ffecec;
+}
+
+.product-grid {
+    display: grid;
+    /* Ajusta el número de columnas según el tamaño de pantalla */
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px; /* Espacio entre tarjetas */
+    margin-top: 20px; /* Añadimos un margen superior ya que no hay H2 */
+}
+
+.product-card {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Para alinear contenido */
+    min-height: 380px; /* Aumentamos un poco por si mostramos categoría */
+}
+
+.product-card img {
+    max-width: 100%;
+    height: 150px; /* Altura fija para las imágenes */
+    object-fit: contain; /* Escala la imagen manteniendo la proporción */
+    margin-bottom: 10px;
+    display: block; /* Para centrar con margin: auto si fuera necesario */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.product-card h3 {
+    font-size: 1em;
+    margin: 10px 0;
+    min-height: 40px; /* Espacio para nombres de 2 líneas */
+    color: #333;
+}
+
+/* Estilo para mostrar la categoría original (opcional) */
+.product-category {
+    font-size: 0.75em;
+    color: #888;
+    margin-bottom: 8px;
+    font-style: italic;
+}
+
+
+.offer-tag {
+    background-color: #e21836; /* Rojo PedidosYa */
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: bold;
+    display: inline-block; /* Para que no ocupe todo el ancho */
+    margin-bottom: 10px;
+}
+
+.pricing {
+    margin: 10px 0;
+}
+
+.original-price {
+    color: #888;
+    font-size: 0.9em;
+    margin-right: 5px;
+}
+
+.original-price del {
+    text-decoration: line-through;
+}
+
+.current-price {
+    font-weight: bold;
+    color: #222;
+    font-size: 1.1em;
+}
+
+.unit-price {
+    display: block;
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 3px;
+}
+
+.stock {
+    font-size: 0.8em;
+    color: #555;
+    margin-top: 10px; /* Espacio sobre el stock */
+}
+.description {
+    font-size: 0.8em;
+    color: #777;
+    margin-top: 5px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 40px;
+    margin-top: auto;
+}
+
+/* Estilo para el porcentaje de descuento */
+.discount-percent {
+    font-weight: bold;
+    color: #28a745;
+    font-size: 0.9em;
+    margin-bottom: 5px;
+    display: block;
+}
+
+/* Estilos para el formulario de búsqueda */
+.search-form {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.search-form input[type="text"] {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    min-width: 250px;
+    font-size: 1em;
+}
+
+.search-form button {
+    padding: 8px 15px;
+    background-color: #e21836;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-left: 5px;
+}
+
+.search-form button:hover {
+    background-color: #c4142f;
+}
+
+/* Estilo para mostrar el conteo de resultados */
+.results-count {
+    text-align: center;
+    margin-bottom: 15px;
+    color: #555;
+    font-style: italic;
+}
+
+/* Actualización de product-card para el icono de información */
+.product-card {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 380px;
+    position: relative;
+}
+
+/* Estilo para el icono de información */
+.info-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #666;
+    cursor: pointer;
+    text-decoration: none;
+    z-index: 5;
+}
+
+.info-icon:hover {
+    color: #e21836;
+}
+
+.info-icon .material-symbols-outlined {
+    font-size: 24px;
+    vertical-align: middle;
+}
+
+/* --- Estilos para el Modal --- */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: rgba(0,0,0,0);
+    padding-top: 30px;
+    padding-bottom: 30px;
+    box-sizing: border-box;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 2% auto;
+    padding: 25px;
+    border: 1px solid #ccc;
+    width: 90%;
+    max-width: 650px;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 1.4em;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    flex-shrink: 0;
+    text-align: center;
+}
+
+.modal-details-container {
+    overflow-y: auto;
+    flex-grow: 1;
+    padding-right: 10px;
+}
+
+.modal-image-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.modal-main-image {
+    max-width: 80%;
+    max-height: 250px;
+    object-fit: contain;
+    border-radius: 4px;
+    border: 1px solid #eee;
+}
+
+.modal-section {
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px dotted #eee;
+}
+
+.modal-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.modal-section h4 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    color: #e21836;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.modal-section p {
+    margin: 5px 0;
+    line-height: 1.5;
+    color: #444;
+    font-size: 0.95em;
+}
+
+.modal-section p strong {
+    color: #111;
+}
+
+.modal-section small {
+    font-size: 0.85em;
+    color: #777;
+}
+
+.modal-pricing-offer .offer-tag {
+    display: inline-block;
+    margin-bottom: 10px;
+}
+
+.modal-pricing-offer .current-price {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.modal-pricing-offer .original-price del {
+    color: #888;
+}
+
+.offer-detail {
+    font-style: italic;
+    color: #555;
+    font-size: 0.9em;
+    margin-top: 8px;
+}
+
+.dietary-info {
+    font-style: italic;
+    color: #666;
+}
+
+.close-modal {
+    color: #aaa;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close-modal:hover,
+.close-modal:focus {
+    color: black;
+    text-decoration: none;
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 99;
+}
